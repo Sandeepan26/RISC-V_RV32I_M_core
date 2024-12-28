@@ -17,15 +17,16 @@ module Data_Memory (
   reg [31:0] Data_Mem [(2**22 - 1):0];   //4M x 32 data memory
    
   
-  function bit [31:0] load_store_output(input [2:0] load_store_select, [31:0] address);
+  
+  function automatic bit [31:0] load_store_output(input [2:0] load_store_select, [31:0] address);
     begin
       case(load_store_select)
-        3'b000 : load_store_output = {{24{Data_Mem[address][31]}}, Data_Mem[address][7:0]}; //LB
-        3'b001 : load_store_output = {{16{Data_Mem[address][31]}}, Data_Mem[address][15:0]}; //LH
-        3'b010 : load_store_output = Data_Mem[address];  //LW
-        3'b100 : load_store_output = {{24{1'b0}}, Data_Mem[address][7:0]};  //LBU
-        3'b101 : load_store_output = {{16{1'b0}}, Data_Mem[address][15:0]}; //LHU
-        default : load_store_output = Data_Mem[address];  //default for case and other operations
+        3'b000 : load_store_output = {{24{Data_Mem[address][31]}}, Data_Mem[address[31:2]][7:0]}; //LB
+        3'b001 : load_store_output = {{16{Data_Mem[address][31]}}, Data_Mem[address[31:2]][15:0]}; //LH
+        3'b010 : load_store_output = Data_Mem[address[31:2]];  //LW
+        3'b100 : load_store_output = {{24{1'b0}}, Data_Mem[address[31:2]][7:0]};  //LBU
+        3'b101 : load_store_output = {{16{1'b0}}, Data_Mem[address[31:2]][15:0]}; //LHU
+        default : load_store_output = Data_Mem[address[31:2]];  //default for case and other operations
       endcase
     end
   endfunction
@@ -34,7 +35,7 @@ module Data_Memory (
   always @(posedge CLK) 
     begin
       if(wr_en_1) //MemWriteM = 1 for write
-        Data_Mem[address_port_1] <= data_port_1; 
+        Data_Mem[address_port_1[31:2]] <= data_port_1; //storing word as per alignment
     else
       read_port_1 <= load_store_output(load_store_sel, address_port_1);  //read data from function call
     end
